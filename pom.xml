@@ -8,7 +8,9 @@
     <artifactId>java-backend-casino</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>Java Backend Casino</name>
-
+    <build>
+        <sourceDirectory>src</sourceDirectory>
+    </build>
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>

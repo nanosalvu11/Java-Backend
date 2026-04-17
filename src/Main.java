@@ -62,7 +62,7 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(server::close));
 
         System.out.println("API REST lista en http://localhost:" + server.getPort() + "/api");
-        System.out.println("Login admin: admin@casino.com / admin123");
+        System.out.println("Login admin: elchiqui@casino.com / admin123");
         System.out.println("Login jugador: j1@casino.com / 1234");
 
         new CountDownLatch(1).await();

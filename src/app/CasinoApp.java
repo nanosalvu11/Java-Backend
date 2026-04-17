@@ -71,14 +71,23 @@ public final class CasinoApp {
         MesaService mesaService = new MesaService(mesaRepository, juegoService);
         ApuestaService apuestaService = new ApuestaService(apuestaRepository, usuarioService, mesaService, juegoService);
 
-        Usuario admin = usuarioRepository.save(new Usuario(null, "Admin", "Casino", "admin@casino.com", "admin123", BigDecimal.ZERO, Usuario.ROL_ADMIN));
-        Usuario jugador = usuarioService.crear(admin, new Usuario(null, "Jugador", "Uno", "j1@casino.com", "1234", new BigDecimal("1000.00"), Usuario.ROL_JUGADOR));
+        Usuario admin = asegurarUsuario(usuarioRepository, new Usuario(null, "Admin", "Casino", "elchiqui@casino.com", "admin123", BigDecimal.ZERO, Usuario.ROL_ADMIN));
+        Usuario jugador = usuarioRepository.findByEmail("j1@casino.com")
+                .map(existente -> {
+                    existente.setNombre("Jugador");
+                    existente.setApellido("Uno");
+                    existente.setPassword("1234");
+                    existente.setSaldo(new BigDecimal("1000.00"));
+                    existente.setRol(Usuario.ROL_JUGADOR);
+                    return usuarioRepository.save(existente);
+                })
+                .orElseGet(() -> usuarioService.crear(admin, new Usuario(null, "Jugador", "Uno", "j1@casino.com", "1234", new BigDecimal("1000.00"), Usuario.ROL_JUGADOR)));
 
-        Juego ruleta = juegoService.crear(admin, new Juego(null, "Ruleta", "Apuesta simple par/impar"));
-        Juego blackjack = juegoService.crear(admin, new Juego(null, "Blackjack", "Objetivo: acercarse a 21 sin pasarse"));
+        Juego ruleta = asegurarJuego(juegoRepository, juegoService, admin, new Juego(null, "Ruleta", "Apuesta simple par/impar"));
+        Juego blackjack = asegurarJuego(juegoRepository, juegoService, admin, new Juego(null, "Blackjack", "Objetivo: acercarse a 21 sin pasarse"));
 
-        Mesa mesaRuleta = mesaService.crear(admin, new Mesa(null, ruleta.getId(), new BigDecimal("50"), new BigDecimal("500"), Mesa.ESTADO_ABIERTA));
-        Mesa mesaBlackjack = mesaService.crear(admin, new Mesa(null, blackjack.getId(), new BigDecimal("100"), new BigDecimal("300"), Mesa.ESTADO_ABIERTA));
+        Mesa mesaRuleta = asegurarMesa(mesaRepository, mesaService, admin, new Mesa(null, ruleta.getId(), new BigDecimal("50"), new BigDecimal("500"), Mesa.ESTADO_ABIERTA));
+        Mesa mesaBlackjack = asegurarMesa(mesaRepository, mesaService, admin, new Mesa(null, blackjack.getId(), new BigDecimal("100"), new BigDecimal("300"), Mesa.ESTADO_ABIERTA));
 
         return new CasinoApp(
                 usuarioRepository,
@@ -96,6 +105,40 @@ public final class CasinoApp {
                 mesaRuleta,
                 mesaBlackjack
         );
+    }
+
+    private static Usuario asegurarUsuario(UsuarioRepository repository, Usuario seed) {
+        return repository.findByEmail(seed.getEmail())
+                .map(existente -> {
+                    existente.setNombre(seed.getNombre());
+                    existente.setApellido(seed.getApellido());
+                    existente.setPassword(seed.getPassword());
+                    existente.setSaldo(seed.getSaldo());
+                    existente.setRol(seed.getRol());
+                    return repository.save(existente);
+                })
+                .orElseGet(() -> repository.save(seed));
+    }
+
+    private static Juego asegurarJuego(JuegoRepository repository, JuegoService service, Usuario actor, Juego seed) {
+        return repository.findByNombre(seed.getNombre())
+                .map(existente -> {
+                    existente.setReglas(seed.getReglas());
+                    return repository.save(existente);
+                })
+                .orElseGet(() -> service.crear(actor, seed));
+    }
+
+    private static Mesa asegurarMesa(MesaRepository repository, MesaService service, Usuario actor, Mesa seed) {
+        return repository.findByJuegoId(seed.getIdJuego()).stream()
+                .findFirst()
+                .map(existente -> {
+                    existente.setApuestaMinima(seed.getApuestaMinima());
+                    existente.setApuestaMaxima(seed.getApuestaMaxima());
+                    existente.setEstado(seed.getEstado());
+                    return repository.save(existente);
+                })
+                .orElseGet(() -> service.crear(actor, seed));
     }
 
     public UsuarioRepository getUsuarioRepository() {
@@ -154,4 +197,3 @@ public final class CasinoApp {
         return mesaBlackjack;
     }
 }
-
