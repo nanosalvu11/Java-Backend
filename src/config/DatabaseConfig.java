@@ -24,8 +24,12 @@ public final class DatabaseConfig {
 
     private DatabaseConfig() {}
 
+    public static HikariDataSource getDataSource() {
+        return dataSource;
+    }
+
     public static Connection getConnection() throws SQLException {
-        return dataSource.getConnection();
+        return getDataSource().getConnection();
     }
 
     public static void closeDataSource() {

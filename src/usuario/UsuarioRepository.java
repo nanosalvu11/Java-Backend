@@ -26,7 +26,7 @@ public class UsuarioRepository {
 
     public Optional<Usuario> findById(Long id) {
         String sql = "SELECT id, nombre, apellido, email, password, saldo, rol FROM usuarios WHERE id = ?";
-        try (Connection connection = DatabaseConfig.getConnection();
+        try (Connection connection = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             try (ResultSet rs = statement.executeQuery()) {
@@ -42,7 +42,7 @@ public class UsuarioRepository {
 
     public Optional<Usuario> findByEmail(String email) {
         String sql = "SELECT id, nombre, apellido, email, password, saldo, rol FROM usuarios WHERE LOWER(email) = LOWER(?) LIMIT 1";
-        try (Connection connection = DatabaseConfig.getConnection();
+        try (Connection connection = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, email);
             try (ResultSet rs = statement.executeQuery()) {
@@ -59,7 +59,7 @@ public class UsuarioRepository {
     public List<Usuario> findAll() {
         String sql = "SELECT id, nombre, apellido, email, password, saldo, rol FROM usuarios ORDER BY id";
         List<Usuario> usuarios = new ArrayList<>();
-        try (Connection connection = DatabaseConfig.getConnection();
+        try (Connection connection = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet rs = statement.executeQuery()) {
             while (rs.next()) {
@@ -73,7 +73,7 @@ public class UsuarioRepository {
 
     public boolean deleteById(Long id) {
         String sql = "DELETE FROM usuarios WHERE id = ?";
-        try (Connection connection = DatabaseConfig.getConnection();
+        try (Connection connection = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             return statement.executeUpdate() > 0;
@@ -82,9 +82,17 @@ public class UsuarioRepository {
         }
     }
 
+    public Usuario update(Usuario usuario) {
+        return updateExisting(usuario);
+    }
+
+    public boolean delete(Long id) {
+        return deleteById(id);
+    }
+
     private Usuario insert(Usuario usuario) {
         String sql = "INSERT INTO usuarios (nombre, apellido, email, password, saldo, rol) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection connection = DatabaseConfig.getConnection();
+        try (Connection connection = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             bindUsuario(statement, usuario, false);
             statement.executeUpdate();
@@ -99,9 +107,9 @@ public class UsuarioRepository {
         }
     }
 
-    private Usuario update(Usuario usuario) {
+    private Usuario updateExisting(Usuario usuario) {
         String sql = "UPDATE usuarios SET nombre = ?, apellido = ?, email = ?, password = ?, saldo = ?, rol = ? WHERE id = ?";
-        try (Connection connection = DatabaseConfig.getConnection();
+        try (Connection connection = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             bindUsuario(statement, usuario, true);
             int affected = statement.executeUpdate();
@@ -152,11 +160,12 @@ public class UsuarioRepository {
                     UNIQUE KEY uk_usuarios_email (email)
                 )
                 """;
-        try (Connection connection = DatabaseConfig.getConnection();
+        try (Connection connection = DatabaseConfig.getDataSource().getConnection();
              Statement statement = connection.createStatement()) {
             statement.execute(sql);
         } catch (SQLException e) {
             throw new IllegalStateException("Error al inicializar esquema de usuarios", e);
         }
     }
+
 }

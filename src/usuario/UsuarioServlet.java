@@ -1,42 +1,219 @@
 package usuario;
 
-import java.math.BigDecimal;
-import java.util.List;
+import app.CasinoApp;
+import http.Json;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-public class UsuarioServlet {
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@WebServlet(UsuarioServlet.BASE_PATH)
+public class UsuarioServlet extends HttpServlet {
     public static final String BASE_PATH = "/api/usuarios/*";
 
-    private final UsuarioService usuarioService;
+    private transient UsuarioService usuarioService;
+    private transient Json json;
 
-    public UsuarioServlet(UsuarioService usuarioService) {
-        this.usuarioService = usuarioService;
+    @Override
+    public void init() {
+        ServletContext servletContext = getServletContext();
+        Object appAttr = servletContext == null ? null : servletContext.getAttribute(CasinoApp.CONTEXT_ATTRIBUTE);
+        if (appAttr instanceof CasinoApp app) {
+            this.usuarioService = app.getUsuarioService();
+        } else {
+            throw new IllegalStateException("CasinoApp no esta inicializado en el ServletContext");
+        }
+        this.json = new Json();
     }
 
-    public Usuario postCrear(Usuario actor, Usuario nuevo) {
-        return usuarioService.crear(actor, nuevo);
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        setupJsonResponse(res);
+        String pathInfo = normalizePathInfo(req.getPathInfo());
+
+        try {
+            if ("/".equals(pathInfo)) {
+                List<Map<String, Object>> usuarios = usuarioService.getAll().stream().map(this::usuarioToMap).toList();
+                writeJson(res, HttpServletResponse.SC_OK, usuarios);
+                return;
+            }
+
+            Long id = parseId(pathInfo);
+            Optional<Usuario> usuario = usuarioService.getById(id);
+            if (usuario.isEmpty()) {
+                writeJson(res, HttpServletResponse.SC_NOT_FOUND, error("Usuario no encontrado"));
+                return;
+            }
+            writeJson(res, HttpServletResponse.SC_OK, usuarioToMap(usuario.get()));
+        } catch (IllegalArgumentException e) {
+            writeJson(res, HttpServletResponse.SC_BAD_REQUEST, error(e.getMessage()));
+        }
     }
 
-    public Usuario putActualizar(Usuario actor, Long id, Usuario cambios) {
-        return usuarioService.actualizar(actor, id, cambios);
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        setupJsonResponse(res);
+        try {
+            Map<String, Object> body = readJsonBody(req);
+            Usuario nuevo = new Usuario(
+                    null,
+                    optionalString(body, "nombre"),
+                    optionalString(body, "apellido"),
+                    optionalString(body, "email"),
+                    optionalString(body, "password"),
+                    optionalBigDecimal(body, "saldo"),
+                    optionalString(body, "rol")
+            );
+            Usuario creado = usuarioService.crear(nuevo);
+            writeJson(res, HttpServletResponse.SC_CREATED, usuarioToMap(creado));
+        } catch (IllegalArgumentException e) {
+            writeJson(res, HttpServletResponse.SC_BAD_REQUEST, error(e.getMessage()));
+        }
     }
 
-    public void deleteEliminar(Usuario actor, Long id) {
-        usuarioService.eliminar(actor, id);
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        setupJsonResponse(res);
+        String pathInfo = normalizePathInfo(req.getPathInfo());
+        if ("/".equals(pathInfo)) {
+            writeJson(res, HttpServletResponse.SC_BAD_REQUEST, error("ID requerido"));
+            return;
+        }
+
+        try {
+            Long id = parseId(pathInfo);
+            Map<String, Object> body = readJsonBody(req);
+            Usuario existente = usuarioService.obtenerPorId(id);
+
+            if (body.containsKey("nombre")) {
+                existente.setNombre(optionalString(body, "nombre"));
+            }
+            if (body.containsKey("apellido")) {
+                existente.setApellido(optionalString(body, "apellido"));
+            }
+            if (body.containsKey("email")) {
+                existente.setEmail(optionalString(body, "email"));
+            }
+            if (body.containsKey("password")) {
+                existente.setPassword(optionalString(body, "password"));
+            }
+            if (body.containsKey("rol")) {
+                existente.setRol(optionalString(body, "rol"));
+            }
+            if (body.containsKey("saldo")) {
+                existente.setSaldo(optionalBigDecimal(body, "saldo"));
+            }
+
+            Usuario actualizado = usuarioService.actualizar(existente);
+            writeJson(res, HttpServletResponse.SC_OK, usuarioToMap(actualizado));
+        } catch (IllegalArgumentException e) {
+            int status = "Usuario no encontrado".equals(e.getMessage()) ? HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_BAD_REQUEST;
+            writeJson(res, status, error(e.getMessage()));
+        }
     }
 
-    public Usuario getPorId(Usuario actor, Long id) {
-        return usuarioService.obtener(actor, id);
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        setupJsonResponse(res);
+        String pathInfo = normalizePathInfo(req.getPathInfo());
+        if ("/".equals(pathInfo)) {
+            writeJson(res, HttpServletResponse.SC_BAD_REQUEST, error("ID requerido"));
+            return;
+        }
+
+        try {
+            Long id = parseId(pathInfo);
+            usuarioService.eliminar(id);
+            res.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        } catch (IllegalArgumentException e) {
+            int status = "Usuario no encontrado".equals(e.getMessage()) ? HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_BAD_REQUEST;
+            writeJson(res, status, error(e.getMessage()));
+        }
     }
 
-    public List<Usuario> getListado(Usuario actor) {
-        return usuarioService.listar(actor);
+    private String normalizePathInfo(String pathInfo) {
+        if (pathInfo == null || pathInfo.isBlank()) {
+            return "/";
+        }
+        if (pathInfo.length() > 1 && pathInfo.endsWith("/")) {
+            return pathInfo.substring(0, pathInfo.length() - 1);
+        }
+        return pathInfo;
     }
 
-    public BigDecimal postDeposito(Usuario actor, Long usuarioId, BigDecimal monto) {
-        return usuarioService.depositar(actor, usuarioId, monto);
+    private Long parseId(String pathInfo) {
+        String raw = pathInfo.startsWith("/") ? pathInfo.substring(1) : pathInfo;
+        if (raw.contains("/")) {
+            throw new IllegalArgumentException("Ruta no valida");
+        }
+        try {
+            return Long.parseLong(raw);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("ID invalido");
+        }
     }
 
-    public BigDecimal postRetiro(Usuario actor, Long usuarioId, BigDecimal monto) {
-        return usuarioService.retirar(actor, usuarioId, monto);
+    private void setupJsonResponse(HttpServletResponse res) {
+        res.setContentType("application/json");
+        res.setCharacterEncoding("UTF-8");
+    }
+
+    private Map<String, Object> readJsonBody(HttpServletRequest req) throws IOException {
+        String body = req.getReader().lines().collect(Collectors.joining()).trim();
+        return body.isBlank() ? new LinkedHashMap<>() : json.parseObject(body);
+    }
+
+    private void writeJson(HttpServletResponse res, int status, Object body) throws IOException {
+        res.setStatus(status);
+        res.getWriter().write(json.stringify(body));
+    }
+
+    private Map<String, Object> error(String message) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("error", message);
+        return map;
+    }
+
+    private String optionalString(Map<String, Object> body, String key) {
+        Object value = body.get(key);
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private BigDecimal optionalBigDecimal(Map<String, Object> body, String key) {
+        Object value = body.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof BigDecimal bigDecimal) {
+            return bigDecimal;
+        }
+        if (value instanceof Number number) {
+            return new BigDecimal(number.toString());
+        }
+        String asText = String.valueOf(value);
+        if (asText.isBlank()) {
+            return null;
+        }
+        return new BigDecimal(asText);
+    }
+
+    private Map<String, Object> usuarioToMap(Usuario usuario) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", usuario.getId());
+        map.put("nombre", usuario.getNombre());
+        map.put("apellido", usuario.getApellido());
+        map.put("email", usuario.getEmail());
+        map.put("saldo", usuario.getSaldo());
+        map.put("rol", usuario.getRol());
+        return map;
     }
 }
