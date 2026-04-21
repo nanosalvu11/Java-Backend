@@ -1,5 +1,8 @@
 import app.CasinoApp;
+import apuesta.ApuestaServlet;
 import config.DatabaseConfig;
+import juego.JuegoServlet;
+import mesa.MesaServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import usuario.UsuarioServlet;
@@ -14,6 +17,9 @@ public class Main {
         context.setContextPath("/");
         context.setAttribute(CasinoApp.CONTEXT_ATTRIBUTE, app);
         context.addServlet(UsuarioServlet.class, UsuarioServlet.BASE_PATH);
+        context.addServlet(JuegoServlet.class, JuegoServlet.BASE_PATH);
+        context.addServlet(MesaServlet.class, MesaServlet.BASE_PATH);
+        context.addServlet(ApuestaServlet.class, ApuestaServlet.BASE_PATH);
         server.setHandler(context);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
