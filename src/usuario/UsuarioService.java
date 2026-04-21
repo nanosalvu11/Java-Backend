@@ -1,6 +1,7 @@
 package usuario;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.List;
 
 public class UsuarioService {
@@ -10,16 +11,46 @@ public class UsuarioService {
         this.repository = repository;
     }
 
-    public Usuario crear(Usuario actor, Usuario nuevo) {
-        requireAdmin(actor);
+    public List<Usuario> getAll() {
+        return repository.findAll();
+    }
+
+    public Optional<Usuario> getById(Long id) {
+        return repository.findById(id);
+    }
+
+    public Usuario crear(Usuario nuevo) {
         validarDatosBase(nuevo);
-        repository.findByEmail(nuevo.getEmail()).ifPresent(u -> {
+        repository.findByEmail(nuevo.getEmail()).ifPresent(ignored -> {
             throw new IllegalArgumentException("Ya existe un usuario con ese email");
         });
         if (nuevo.getSaldo() == null) {
             nuevo.setSaldo(BigDecimal.ZERO);
         }
+        if (nuevo.getRol() == null || nuevo.getRol().isBlank()) {
+            nuevo.setRol(Usuario.ROL_JUGADOR);
+        }
         return repository.save(nuevo);
+    }
+
+    public Usuario actualizar(Usuario usuario) {
+        if (usuario.getId() == null) {
+            throw new IllegalArgumentException("Usuario no encontrado");
+        }
+        obtenerPorId(usuario.getId());
+        return repository.update(usuario);
+    }
+
+    public void eliminar(Long id) {
+        obtenerPorId(id);
+        if (!repository.delete(id)) {
+            throw new IllegalArgumentException("Usuario no encontrado");
+        }
+    }
+
+    public Usuario crear(Usuario actor, Usuario nuevo) {
+        requireAdmin(actor);
+        return crear(nuevo);
     }
 
     public Usuario actualizar(Usuario actor, Long id, Usuario cambios) {
@@ -28,7 +59,7 @@ public class UsuarioService {
         if (cambios.getEmail() != null) {
             repository.findByEmail(cambios.getEmail())
                     .filter(u -> !u.getId().equals(id))
-                    .ifPresent(u -> {
+                    .ifPresent(ignored -> {
                         throw new IllegalArgumentException("Ya existe un usuario con ese email");
                     });
             existente.setEmail(cambios.getEmail());
@@ -48,14 +79,12 @@ public class UsuarioService {
         if (cambios.getSaldo() != null) {
             existente.setSaldo(cambios.getSaldo());
         }
-        return repository.save(existente);
+        return repository.update(existente);
     }
 
     public void eliminar(Usuario actor, Long id) {
         requireAdmin(actor);
-        if (!repository.deleteById(id)) {
-            throw new IllegalArgumentException("Usuario no encontrado");
-        }
+        eliminar(id);
     }
 
     public Usuario obtener(Usuario actor, Long id) {
@@ -70,7 +99,7 @@ public class UsuarioService {
 
     public List<Usuario> listar(Usuario actor) {
         requireAdmin(actor);
-        return repository.findAll();
+        return getAll();
     }
 
     public Usuario autenticar(String email, String password) {

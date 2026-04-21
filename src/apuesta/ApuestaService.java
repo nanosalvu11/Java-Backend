@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 public class ApuestaService {
     private final ApuestaRepository repository;
@@ -42,8 +41,7 @@ public class ApuestaService {
         validarMesaYSaldo(usuario, mesa, monto);
 
         BigDecimal resultadoMonto = resolverResultadoAleatorio(juego, monto);
-        usuario.setSaldo(usuario.getSaldo().add(resultadoMonto));
-
+        aplicarResultado(usuarioId, actor, resultadoMonto);
         Apuesta apuesta = new Apuesta(null, usuarioId, mesaId, monto, resultadoMonto, LocalDateTime.now());
         return repository.save(apuesta);
     }
@@ -93,8 +91,7 @@ public class ApuestaService {
             resultadoMonto = monto.negate();
         }
 
-        usuario.setSaldo(usuario.getSaldo().add(resultadoMonto));
-
+        aplicarResultado(usuarioId, actor, resultadoMonto);
         Apuesta apuesta = new Apuesta(null, usuarioId, mesaId, monto, resultadoMonto, LocalDateTime.now());
         return repository.save(apuesta);
     }
@@ -128,9 +125,9 @@ public class ApuestaService {
         List<Apuesta> apuestas = repository.findByFecha(desde, hasta);
 
         if (juegoId != null) {
-            apuestas = apuestas.stream()
+                apuestas = apuestas.stream()
                     .filter(a -> mesaService.obtenerPorId(a.getIdMesa()).getIdJuego().equals(juegoId))
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         List<ReporteRecaudacion> resultado = new ArrayList<>();
@@ -183,6 +180,16 @@ public class ApuestaService {
             return monto.multiply(new BigDecimal("1.5"));
         }
         return monto;
+    }
+
+    private void aplicarResultado(Long usuarioId, Usuario actor, BigDecimal resultadoMonto) {
+        if (resultadoMonto.compareTo(BigDecimal.ZERO) > 0) {
+            usuarioService.depositar(actor, usuarioId, resultadoMonto);
+            return;
+        }
+        if (resultadoMonto.compareTo(BigDecimal.ZERO) < 0) {
+            usuarioService.retirar(actor, usuarioId, resultadoMonto.abs());
+        }
     }
 
     private void validarActorApuesta(Usuario actor, Long usuarioId) {
