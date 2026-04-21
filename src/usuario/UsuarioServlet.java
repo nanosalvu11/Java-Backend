@@ -1,7 +1,9 @@
 package usuario;
 
 import app.CasinoApp;
-import http.Json;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,14 +16,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @WebServlet(UsuarioServlet.BASE_PATH)
 public class UsuarioServlet extends HttpServlet {
     public static final String BASE_PATH = "/api/usuarios/*";
+    private static final TypeReference<LinkedHashMap<String, Object>> MAP_TYPE = new TypeReference<>() {};
 
     private transient UsuarioService usuarioService;
-    private transient Json json;
+    private transient ObjectMapper objectMapper;
 
     @Override
     public void init() {
@@ -32,7 +34,7 @@ public class UsuarioServlet extends HttpServlet {
         } else {
             throw new IllegalStateException("CasinoApp no esta inicializado en el ServletContext");
         }
-        this.json = new Json();
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
@@ -168,13 +170,20 @@ public class UsuarioServlet extends HttpServlet {
     }
 
     private Map<String, Object> readJsonBody(HttpServletRequest req) throws IOException {
-        String body = req.getReader().lines().collect(Collectors.joining()).trim();
-        return body.isBlank() ? new LinkedHashMap<>() : json.parseObject(body);
+        String body = req.getReader().lines().reduce("", String::concat).trim();
+        if (body.isBlank()) {
+            return new LinkedHashMap<>();
+        }
+        try {
+            return objectMapper.readValue(body, MAP_TYPE);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("JSON invalido");
+        }
     }
 
     private void writeJson(HttpServletResponse res, int status, Object body) throws IOException {
         res.setStatus(status);
-        res.getWriter().write(json.stringify(body));
+        res.getWriter().write(objectMapper.writeValueAsString(body));
     }
 
     private Map<String, Object> error(String message) {
