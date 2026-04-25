@@ -1,0 +1,104 @@
+### ===========================================
+### Apuesta API tests - IntelliJ HTTP Client
+### BASE_PATH en `ApuestaServlet`: /api/apuestas/*
+### ===========================================
+
+@baseUrl = http://localhost:8080
+@apuestas = {{baseUrl}}/api/apuestas
+@actorId = 1
+
+### 1) Realizar apuesta simple (requiere actor)
+POST {{apuestas}}/
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "usuarioId": 1,
+  "mesaId": 1,
+  "monto": 500
+}
+
+###
+
+### 2) Jugar blackjack (requiere actor)
+POST {{apuestas}}/blackjack
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "usuarioId": 1,
+  "mesaId": 1,
+  "monto": 250,
+  "decisiones": ["PEDIR", "PLANTARSE"]
+}
+
+###
+
+### 3) Historial de un usuario (requiere actor)
+GET {{apuestas}}/historial/1
+X-Actor-Id: {{actorId}}
+Accept: application/json
+
+###
+
+### 4) Reporte de recaudacion (requiere actor)
+GET {{apuestas}}/recaudacion?desde=2026-01-01T00:00:00&hasta=2026-12-31T23:59:59
+X-Actor-Id: {{actorId}}
+Accept: application/json
+
+###
+
+### 5) Reporte de recaudacion filtrado por juego
+GET {{apuestas}}/recaudacion?desde=2026-01-01T00:00:00&hasta=2026-12-31T23:59:59&juegoId=1
+X-Actor-Id: {{actorId}}
+Accept: application/json
+
+###
+
+### 6) Error esperado: falta header X-Actor-Id
+GET {{apuestas}}/historial/1
+Accept: application/json
+
+###
+
+### 7) Error esperado: ID invalido en historial
+GET {{apuestas}}/historial/abc
+X-Actor-Id: {{actorId}}
+Accept: application/json
+
+###
+
+### 8) Error esperado: parametro desde invalido
+GET {{apuestas}}/recaudacion?desde=fecha-mala&hasta=2026-12-31T23:59:59
+X-Actor-Id: {{actorId}}
+Accept: application/json
+
+###
+
+### 9) Error esperado: parametro juegoId invalido
+GET {{apuestas}}/recaudacion?desde=2026-01-01T00:00:00&hasta=2026-12-31T23:59:59&juegoId=abc
+X-Actor-Id: {{actorId}}
+Accept: application/json
+
+###
+
+### 10) Error esperado: ruta no encontrada
+GET {{apuestas}}/1
+X-Actor-Id: {{actorId}}
+Accept: application/json
+
+###
+
+### 11) Error esperado: JSON invalido
+POST {{apuestas}}/
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "usuarioId": 1,
+  "mesaId": 1,
+}
+

@@ -1,0 +1,85 @@
+### =========================================
+### Usuario API tests - IntelliJ HTTP Client
+### BASE_PATH en `UsuarioServlet`: /api/usuarios/*
+### =========================================
+
+@baseUrl = http://localhost:8080
+@usuarios = {{baseUrl}}/api/usuarios
+
+### 1) Health rapido: listar todos
+GET {{usuarios}}/
+Accept: application/json
+
+###
+
+### 2) Crear usuario
+POST {{usuarios}}/
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Perez",
+  "email": "juan.perez@example.com",
+  "password": "1234",
+  "saldo": 1500.50,
+  "rol": "jugador"
+}
+
+###
+
+### 3) Obtener usuario por id (cambia el ID si hace falta)
+GET {{usuarios}}/1
+Accept: application/json
+
+###
+
+### 4) Actualizar usuario (PUT parcial)
+PUT {{usuarios}}/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "saldo": 2200.75,
+  "rol": "vip"
+}
+
+###
+
+### 5) Eliminar usuario
+DELETE {{usuarios}}/1
+Accept: application/json
+
+###
+
+### 6) Error esperado: ID invalido
+GET {{usuarios}}/abc
+Accept: application/json
+
+###
+
+### 7) Error esperado: ruta no valida
+GET {{usuarios}}/1/extra
+Accept: application/json
+
+###
+
+### 8) Error esperado: JSON invalido en POST
+POST {{usuarios}}/
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Pepe"
+}
+
+###
+
+### 9) Error esperado: PUT sin ID
+PUT {{usuarios}}/
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "SinId"
+}

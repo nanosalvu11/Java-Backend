@@ -1,0 +1,112 @@
+### =======================================
+### Mesa API tests - IntelliJ HTTP Client
+### BASE_PATH en `MesaServlet`: /api/mesas/*
+### =======================================
+
+@baseUrl = http://localhost:8080
+@mesas = {{baseUrl}}/api/mesas
+@actorId = 1
+
+### 1) Listar mesas
+GET {{mesas}}/
+Accept: application/json
+
+###
+
+### 2) Listar mesas por juego
+GET {{mesas}}/juego/1
+Accept: application/json
+
+###
+
+### 3) Crear mesa (requiere actor)
+POST {{mesas}}/
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "idJuego": 1,
+  "apuestaMinima": 100,
+  "apuestaMaxima": 10000,
+  "estado": "ACTIVA"
+}
+
+###
+
+### 4) Obtener mesa por id
+GET {{mesas}}/1
+Accept: application/json
+
+###
+
+### 5) Actualizar mesa (requiere actor)
+PUT {{mesas}}/1
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "apuestaMinima": 200,
+  "apuestaMaxima": 15000,
+  "estado": "PAUSADA"
+}
+
+###
+
+### 6) Eliminar mesa (requiere actor)
+DELETE {{mesas}}/1
+X-Actor-Id: {{actorId}}
+Accept: application/json
+
+###
+
+### 7) Error esperado: falta header X-Actor-Id
+POST {{mesas}}/
+Content-Type: application/json
+Accept: application/json
+
+{
+  "idJuego": 1,
+  "apuestaMinima": 100,
+  "apuestaMaxima": 1000,
+  "estado": "ACTIVA"
+}
+
+###
+
+### 8) Error esperado: ID invalido
+GET {{mesas}}/abc
+Accept: application/json
+
+###
+
+### 9) Error esperado: ruta no valida
+GET {{mesas}}/juego/1/extra
+Accept: application/json
+
+###
+
+### 10) Error esperado: JSON invalido
+POST {{mesas}}/
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "idJuego": 1,
+  "apuestaMinima": 100,
+}
+
+###
+
+### 11) Error esperado: PUT sin ID
+PUT {{mesas}}/
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "estado": "ACTIVA"
+}
+
