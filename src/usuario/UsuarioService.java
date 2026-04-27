@@ -24,6 +24,7 @@ public class UsuarioService {
         repository.findByEmail(nuevo.getEmail()).ifPresent(ignored -> {
             throw new IllegalArgumentException("Ya existe un usuario con ese email");
         });
+        nuevo.setPassword(hashPasswordIfNeeded(nuevo.getPassword()));
         if (nuevo.getSaldo() == null) {
             nuevo.setSaldo(BigDecimal.ZERO);
         }
@@ -37,7 +38,12 @@ public class UsuarioService {
         if (usuario.getId() == null) {
             throw new IllegalArgumentException("Usuario no encontrado");
         }
-        obtenerPorId(usuario.getId());
+        Usuario existente = obtenerPorId(usuario.getId());
+        if (usuario.getPassword() == null || usuario.getPassword().isBlank()) {
+            usuario.setPassword(existente.getPassword());
+        } else if (!usuario.getPassword().equals(existente.getPassword())) {
+            usuario.setPassword(hashPasswordIfNeeded(usuario.getPassword()));
+        }
         return repository.update(usuario);
     }
 
@@ -71,7 +77,7 @@ public class UsuarioService {
             existente.setApellido(cambios.getApellido());
         }
         if (cambios.getPassword() != null) {
-            existente.setPassword(cambios.getPassword());
+            existente.setPassword(hashPasswordIfNeeded(cambios.getPassword()));
         }
         if (cambios.getRol() != null) {
             existente.setRol(cambios.getRol());
@@ -105,10 +111,18 @@ public class UsuarioService {
     public Usuario autenticar(String email, String password) {
         Usuario usuario = repository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Credenciales invalidas"));
-        if (!usuario.getPassword().equals(password)) {
-            throw new IllegalArgumentException("Credenciales invalidas");
+        if (PasswordHasher.matches(password, usuario.getPassword())) {
+            return usuario;
         }
-        return usuario;
+
+        // Compatibilidad con datos legacy: si estaba en texto plano, se migra a bcrypt al autenticar.
+        if (password != null && password.equals(usuario.getPassword())) {
+            usuario.setPassword(PasswordHasher.hash(password));
+            repository.update(usuario);
+            return usuario;
+        }
+
+        throw new IllegalArgumentException("Credenciales invalidas");
     }
 
     public BigDecimal depositar(Usuario actor, Long usuarioId, BigDecimal monto) {
@@ -172,5 +186,15 @@ public class UsuarioService {
         if (actor == null || !actor.esAdmin()) {
             throw new SecurityException("Operacion solo permitida para ADMIN");
         }
+    }
+
+    private String hashPasswordIfNeeded(String password) {
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("El password es obligatorio");
+        }
+        if (PasswordHasher.isBcryptHash(password)) {
+            return password;
+        }
+        return PasswordHasher.hash(password);
     }
 }

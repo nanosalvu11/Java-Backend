@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="UltimateRestCollectionService">
+    <option name="rootNodes">
+      <list>
+        <node id="36766759-10c4-4263-9978-61d25e2d150a" name="Default Collection" isFolder="true">
+          <option name="folder" value="true" />
+          <children>
+            <node id="112a4a4a-346c-4fb6-8f3d-852c3587f45b" name="usuarios">
+              <request name="usuarios" url="http://localhost:8080/api/usuarios" bodyType="none">
+                <bodyContent />
+              </request>
+            </node>
+          </children>
+        </node>
+      </list>
+    </option>
+  </component>
+</project>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="UltimateRestHistory">
+    <items>
+      <historyItem>
+        <option name="timestamp" value="1777131197139" />
+        <request url="http://localhost:8080/api/usuarios/" bodyType="none">
+          <bodyContent />
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777131193993" />
+        <request url="http://localhost:8080/api/usuarios/1" bodyType="none">
+          <bodyContent />
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777131185745" />
+        <request method="DELETE" url="http://localhost:8080/api/usuarios/1" bodyType="none">
+          <bodyContent />
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777131043986" />
+        <request method="POST" url="http://localhost:8080/api/usuarios">
+          <bodyContent>{
+  &quot;nombre&quot;: &quot;Juan&quot;,
+  &quot;apellido&quot;: &quot;Perez&quot;,
+  &quot;email&quot;: &quot;juan.perez@example.com&quot;,
+  &quot;password&quot;: &quot;1234&quot;,
+  &quot;saldo&quot;: 1500.50,
+  &quot;rol&quot;: &quot;jugador&quot;
+}</bodyContent>
+          <headers>
+            <param name="Content-Type" value="{   &quot;nombre&quot;: &quot;Juan&quot;,   &quot;apellido&quot;: &quot;Perez&quot;,   &quot;email&quot;: &quot;juan.perez@example.com&quot;,   &quot;password&quot;: &quot;1234&quot;,   &quot;saldo&quot;: 1500.50,   &quot;rol&quot;: &quot;jugador&quot; }" type="HEADER" dataType="String" />
+          </headers>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777131035233" />
+        <request method="POST" url="http://localhost:8080/api/usuarios" bodyType="none">
+          <bodyContent />
+          <headers>
+            <param name="Content-Type" value="{   &quot;nombre&quot;: &quot;Juan&quot;,   &quot;apellido&quot;: &quot;Perez&quot;,   &quot;email&quot;: &quot;juan.perez@example.com&quot;,   &quot;password&quot;: &quot;1234&quot;,   &quot;saldo&quot;: 1500.50,   &quot;rol&quot;: &quot;jugador&quot; }" type="HEADER" dataType="String" />
+          </headers>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777131034032" />
+        <request method="POST" url="http://localhost:8080/api/usuarios" bodyType="none">
+          <bodyContent />
+          <headers>
+            <param name="Content-Type" value="{   &quot;nombre&quot;: &quot;Juan&quot;,   &quot;apellido&quot;: &quot;Perez&quot;,   &quot;email&quot;: &quot;juan.perez@example.com&quot;,   &quot;password&quot;: &quot;1234&quot;,   &quot;saldo&quot;: 1500.50,   &quot;rol&quot;: &quot;jugador&quot; }" type="HEADER" dataType="String" />
+          </headers>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777131033068" />
+        <request method="POST" url="http://localhost:8080/api/usuarios" bodyType="none">
+          <bodyContent />
+          <headers>
+            <param name="Content-Type" value="{   &quot;nombre&quot;: &quot;Juan&quot;,   &quot;apellido&quot;: &quot;Perez&quot;,   &quot;email&quot;: &quot;juan.perez@example.com&quot;,   &quot;password&quot;: &quot;1234&quot;,   &quot;saldo&quot;: 1500.50,   &quot;rol&quot;: &quot;jugador&quot; }" type="HEADER" dataType="String" />
+          </headers>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777131028872" />
+        <request method="POST" url="http://localhost:8080/api/usuarios" bodyType="none">
+          <bodyContent />
+          <headers>
+            <param name="Content-Type" value="" type="HEADER" dataType="String" />
+          </headers>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777131027231" />
+        <request method="POST" url="http://localhost:8080/api/usuarios" bodyType="none">
+          <bodyContent />
+          <headers>
+            <param name="Content-Type" value="" type="HEADER" dataType="String" />
+          </headers>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777131027008" />
+        <request method="POST" url="http://localhost:8080/api/usuarios" bodyType="none">
+          <bodyContent />
+          <headers>
+            <param name="Content-Type" value="" type="HEADER" dataType="String" />
+          </headers>
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777130974088" />
+        <request method="POST" url="http://localhost:8080/api/usuarios" bodyType="none">
+          <bodyContent />
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777130969919" />
+        <request method="POST" url="http://localhost:8080/api/usuarios" bodyType="none">
+          <bodyContent />
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777130951324" />
+        <request method="POST" url="http://localhost:8080/api/usuarios" bodyType="none">
+          <bodyContent />
+        </request>
+      </historyItem>
+      <historyItem>
+        <option name="timestamp" value="1777130923310" />
+        <request url="http://localhost:8080/api/usuarios" bodyType="none">
+          <bodyContent />
+        </request>
+      </historyItem>
+    </items>
+  </component>
+</project>
