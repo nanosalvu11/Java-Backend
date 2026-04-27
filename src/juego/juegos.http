@@ -1,0 +1,100 @@
+### ========================================
+### Juego API tests - IntelliJ HTTP Client
+### BASE_PATH en `JuegoServlet`: /api/juegos/*
+### ========================================
+
+@baseUrl = http://localhost:8080
+@juegos = {{baseUrl}}/api/juegos
+@actorId = 1
+
+### 1) Listar juegos
+GET {{juegos}}/
+Accept: application/json
+
+###
+
+### 2) Crear juego (requiere actor)
+POST {{juegos}}/
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Blackjack",
+  "reglas": "21 sin pasarse"
+}
+
+###
+
+### 3) Obtener juego por id
+GET {{juegos}}/1
+Accept: application/json
+
+###
+
+### 4) Actualizar juego (requiere actor)
+PUT {{juegos}}/1
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Blackjack Pro",
+  "reglas": "21 con variaciones"
+}
+
+###
+
+### 5) Eliminar juego (requiere actor)
+DELETE {{juegos}}/1
+X-Actor-Id: {{actorId}}
+Accept: application/json
+
+###
+
+### 6) Error esperado: falta header X-Actor-Id
+POST {{juegos}}/
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Sin actor",
+  "reglas": "test"
+}
+
+###
+
+### 7) Error esperado: ID invalido
+GET {{juegos}}/abc
+Accept: application/json
+
+###
+
+### 8) Error esperado: ruta no valida
+GET {{juegos}}/1/extra
+Accept: application/json
+
+###
+
+### 9) Error esperado: JSON invalido
+POST {{juegos}}/
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Juego roto",
+}
+
+###
+
+### 10) Error esperado: PUT sin ID
+PUT {{juegos}}/
+X-Actor-Id: {{actorId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Sin id"
+}
+
