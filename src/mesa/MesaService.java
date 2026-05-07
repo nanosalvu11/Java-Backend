@@ -64,6 +64,27 @@ public class MesaService {
         return repository.findByJuegoId(juegoId);
     }
 
+    public List<Mesa> listar(int page, int size) {
+        int p = Math.max(0, page);
+        int s = Math.max(1, size);
+        int offset = p * s;
+        return repository.findPage(offset, s);
+    }
+
+    public List<Mesa> listarPorJuego(Long juegoId, int page, int size) {
+        int p = Math.max(0, page);
+        int s = Math.max(1, size);
+        int offset = p * s;
+        return repository.findByJuegoIdPage(juegoId, offset, s);
+    }
+
+    public long contarMesas(Long juegoId) {
+        if (juegoId == null) {
+            return repository.countAll();
+        }
+        return repository.countByJuegoId(juegoId);
+    }
+
     public Mesa obtenerPorId(Long id) {
         return repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Mesa no encontrada"));
     }

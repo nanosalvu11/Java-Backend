@@ -71,6 +71,38 @@ public class JuegoRepository {
         }
     }
 
+    public List<Juego> findPage(int offset, int limit) {
+        String sql = "SELECT id, nombre, reglas FROM juegos ORDER BY id LIMIT ? OFFSET ?";
+        List<Juego> juegos = new ArrayList<>();
+        try (Connection connection = DatabaseConfig.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, limit);
+            statement.setInt(2, offset);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    juegos.add(mapRow(rs));
+                }
+            }
+            return juegos;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Error al listar juegos paginados", e);
+        }
+    }
+
+    public long countAll() {
+        String sql = "SELECT COUNT(*) AS cnt FROM juegos";
+        try (Connection connection = DatabaseConfig.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            if (rs.next()) {
+                return rs.getLong("cnt");
+            }
+            return 0L;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Error al contar juegos", e);
+        }
+    }
+
     public boolean deleteById(Long id) {
         String sql = "DELETE FROM juegos WHERE id = ?";
         try (Connection connection = DatabaseConfig.getConnection();

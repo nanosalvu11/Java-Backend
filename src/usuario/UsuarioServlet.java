@@ -64,6 +64,19 @@ public class UsuarioServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         setupJsonResponse(res);
+        String pathInfo = normalizePathInfo(req.getPathInfo());
+        if ("/login".equals(pathInfo)) {
+            try {
+                Map<String, Object> body = readJsonBody(req);
+                String email = optionalString(body, "email");
+                String password = optionalString(body, "password");
+                Usuario usuario = usuarioService.autenticar(email, password);
+                writeJson(res, HttpServletResponse.SC_OK, usuarioToMap(usuario));
+            } catch (IllegalArgumentException e) {
+                writeJson(res, HttpServletResponse.SC_UNAUTHORIZED, error(e.getMessage()));
+            }
+            return;
+        }
         try {
             Map<String, Object> body = readJsonBody(req);
             Usuario nuevo = new Usuario(

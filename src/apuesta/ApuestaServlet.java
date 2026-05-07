@@ -55,18 +55,25 @@ public class ApuestaServlet extends HttpServlet {
             Long mesaId = optionalLong(body, "mesaId");
             BigDecimal monto = optionalBigDecimal(body, "monto");
 
-            Apuesta resultado;
-            if ("/blackjack".equals(pathInfo)) {
-                List<String> decisiones = optionalStringList(body, "decisiones");
-                resultado = apuestaService.jugarBlackjack(actor, usuarioId, mesaId, monto, decisiones);
-            } else if ("/".equals(pathInfo)) {
-                resultado = apuestaService.realizarApuesta(actor, usuarioId, mesaId, monto);
-            } else {
-                writeJson(res, HttpServletResponse.SC_NOT_FOUND, error("Ruta no encontrada"));
-                return;
+            Object resultado;
+            switch (pathInfo) {
+                case "/blackjack" -> {
+                    List<String> decisiones = optionalStringList(body, "decisiones");
+                    resultado = apuestaService.jugarBlackjackDetalle(actor, usuarioId, mesaId, monto, decisiones);
+                }
+                case "/ruleta", "/roulette" -> {
+                    Integer numero = optionalInteger(body, "numero");
+                    String color = optionalString(body, "color");
+                    resultado = apuestaService.jugarRuletaDetalle(actor, usuarioId, mesaId, monto, numero, color);
+                }
+                case "/" -> resultado = apuestaService.realizarApuesta(actor, usuarioId, mesaId, monto);
+                default -> {
+                    writeJson(res, HttpServletResponse.SC_NOT_FOUND, error("Ruta no encontrada"));
+                    return;
+                }
             }
 
-            writeJson(res, HttpServletResponse.SC_CREATED, apuestaToMap(resultado));
+            writeJson(res, HttpServletResponse.SC_CREATED, gameResultToMap(resultado));
         } catch (SecurityException e) {
             writeJson(res, HttpServletResponse.SC_FORBIDDEN, error(e.getMessage()));
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -189,6 +196,11 @@ public class ApuestaServlet extends HttpServlet {
         return Long.parseLong(String.valueOf(value));
     }
 
+    private String optionalString(Map<String, Object> body, String key) {
+        Object value = body.get(key);
+        return value == null ? null : String.valueOf(value);
+    }
+
     private BigDecimal optionalBigDecimal(Map<String, Object> body, String key) {
         Object value = body.get(key);
         if (value == null) {
@@ -205,6 +217,21 @@ public class ApuestaServlet extends HttpServlet {
             return null;
         }
         return new BigDecimal(asText);
+    }
+
+    private Integer optionalInteger(Map<String, Object> body, String key) {
+        Object value = body.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        String text = String.valueOf(value).trim();
+        if (text.isBlank()) {
+            return null;
+        }
+        return Integer.parseInt(text);
     }
 
     private List<String> optionalStringList(Map<String, Object> body, String key) {
@@ -231,6 +258,32 @@ public class ApuestaServlet extends HttpServlet {
         map.put("resultadoMonto", apuesta.getResultadoMonto());
         map.put("fecha", apuesta.getFecha() == null ? null : apuesta.getFecha().toString());
         return map;
+    }
+
+    private Map<String, Object> gameResultToMap(Object result) {
+        if (result instanceof ApuestaService.BlackjackResultado blackjack) {
+            Map<String, Object> map = apuestaToMap(blackjack.getApuesta());
+            map.put("playerCards", blackjack.getPlayerCards());
+            map.put("dealerCards", blackjack.getDealerCards());
+            map.put("playerScore", blackjack.getPlayerScore());
+            map.put("dealerScore", blackjack.getDealerScore());
+            map.put("gameResult", blackjack.getGameResult());
+            map.put("winAmount", blackjack.getWinAmount());
+            map.put("gameType", "blackjack");
+            return map;
+        }
+        if (result instanceof ApuestaService.RuletaResultado roulette) {
+            Map<String, Object> map = apuestaToMap(roulette.getApuesta());
+            map.put("number", roulette.getWinningNumber());
+            map.put("color", roulette.getWinningColor());
+            map.put("won", roulette.isWon());
+            map.put("winAmount", roulette.getWinAmount());
+            map.put("selectedNumber", roulette.getSelectedNumber());
+            map.put("selectedColor", roulette.getSelectedColor());
+            map.put("gameType", "ruleta");
+            return map;
+        }
+        return apuestaToMap((Apuesta) result);
     }
 
     private Map<String, Object> historialToMap(ApuestaService.HistorialPartida historial) {

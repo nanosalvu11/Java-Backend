@@ -55,6 +55,24 @@ public class MesaRepository {
         }
     }
 
+    public List<Mesa> findPage(int offset, int limit) {
+        String sql = "SELECT id, id_juego, apuesta_minima, apuesta_maxima, estado FROM mesas ORDER BY id LIMIT ? OFFSET ?";
+        List<Mesa> mesas = new ArrayList<>();
+        try (Connection connection = DatabaseConfig.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, limit);
+            statement.setInt(2, offset);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    mesas.add(mapRow(rs));
+                }
+            }
+            return mesas;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Error al listar mesas paginadas", e);
+        }
+    }
+
     public List<Mesa> findByJuegoId(Long juegoId) {
         String sql = "SELECT id, id_juego, apuesta_minima, apuesta_maxima, estado FROM mesas WHERE id_juego = ? ORDER BY id";
         List<Mesa> mesas = new ArrayList<>();
@@ -69,6 +87,55 @@ public class MesaRepository {
             return mesas;
         } catch (SQLException e) {
             throw new IllegalStateException("Error al listar mesas por juego", e);
+        }
+    }
+
+    public List<Mesa> findByJuegoIdPage(Long juegoId, int offset, int limit) {
+        String sql = "SELECT id, id_juego, apuesta_minima, apuesta_maxima, estado FROM mesas WHERE id_juego = ? ORDER BY id LIMIT ? OFFSET ?";
+        List<Mesa> mesas = new ArrayList<>();
+        try (Connection connection = DatabaseConfig.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, juegoId);
+            statement.setInt(2, limit);
+            statement.setInt(3, offset);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    mesas.add(mapRow(rs));
+                }
+            }
+            return mesas;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Error al listar mesas por juego paginadas", e);
+        }
+    }
+
+    public long countAll() {
+        String sql = "SELECT COUNT(*) AS cnt FROM mesas";
+        try (Connection connection = DatabaseConfig.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            if (rs.next()) {
+                return rs.getLong("cnt");
+            }
+            return 0L;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Error al contar mesas", e);
+        }
+    }
+
+    public long countByJuegoId(Long juegoId) {
+        String sql = "SELECT COUNT(*) AS cnt FROM mesas WHERE id_juego = ?";
+        try (Connection connection = DatabaseConfig.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, juegoId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong("cnt");
+                }
+            }
+            return 0L;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Error al contar mesas por juego", e);
         }
     }
 

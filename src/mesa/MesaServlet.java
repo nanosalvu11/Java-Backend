@@ -47,14 +47,32 @@ public class MesaServlet extends HttpServlet {
         String pathInfo = normalizePathInfo(req.getPathInfo());
         try {
             if ("/".equals(pathInfo)) {
-                List<Map<String, Object>> mesas = mesaService.listar().stream().map(this::mesaToMap).toList();
-                writeJson(res, HttpServletResponse.SC_OK, mesas);
+                int page = parseIntParam(req, "page", 0);
+                int size = parseIntParam(req, "size", 20);
+                List<Mesa> mesas = mesaService.listar(page, size);
+                long total = mesaService.contarMesas(null);
+                List<Map<String, Object>> data = mesas.stream().map(this::mesaToMap).toList();
+                Map<String, Object> payload = new java.util.LinkedHashMap<>();
+                payload.put("data", data);
+                payload.put("page", page);
+                payload.put("size", size);
+                payload.put("total", total);
+                writeJson(res, HttpServletResponse.SC_OK, payload);
                 return;
             }
             if (pathInfo.startsWith("/juego/")) {
                 Long juegoId = parseTailId(pathInfo, "/juego/");
-                List<Map<String, Object>> mesas = mesaService.listarPorJuego(juegoId).stream().map(this::mesaToMap).toList();
-                writeJson(res, HttpServletResponse.SC_OK, mesas);
+                int page = parseIntParam(req, "page", 0);
+                int size = parseIntParam(req, "size", 20);
+                List<Mesa> mesas = mesaService.listarPorJuego(juegoId, page, size);
+                long total = mesaService.contarMesas(juegoId);
+                List<Map<String, Object>> data = mesas.stream().map(this::mesaToMap).toList();
+                Map<String, Object> payload = new java.util.LinkedHashMap<>();
+                payload.put("data", data);
+                payload.put("page", page);
+                payload.put("size", size);
+                payload.put("total", total);
+                writeJson(res, HttpServletResponse.SC_OK, payload);
                 return;
             }
             Long id = parseId(pathInfo);
@@ -181,6 +199,16 @@ public class MesaServlet extends HttpServlet {
             return Long.parseLong(raw);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("ID invalido");
+        }
+    }
+
+    private int parseIntParam(HttpServletRequest req, String name, int defaultVal) {
+        String raw = req.getParameter(name);
+        if (raw == null || raw.isBlank()) return defaultVal;
+        try {
+            return Integer.parseInt(raw);
+        } catch (NumberFormatException e) {
+            return defaultVal;
         }
     }
 

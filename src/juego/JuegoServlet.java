@@ -46,14 +46,33 @@ public class JuegoServlet extends HttpServlet {
         String pathInfo = normalizePathInfo(req.getPathInfo());
         try {
             if ("/".equals(pathInfo)) {
-                List<Map<String, Object>> juegos = juegoService.listar().stream().map(this::juegoToMap).toList();
-                writeJson(res, HttpServletResponse.SC_OK, juegos);
+                int page = parseIntParam(req, "page", 0);
+                int size = parseIntParam(req, "size", 20);
+                List<Juego> juegos = juegoService.listar(page, size);
+                long total = juegoService.contar();
+                List<Map<String, Object>> data = juegos.stream().map(this::juegoToMap).toList();
+                Map<String, Object> payload = new java.util.LinkedHashMap<>();
+                payload.put("data", data);
+                payload.put("page", page);
+                payload.put("size", size);
+                payload.put("total", total);
+                writeJson(res, HttpServletResponse.SC_OK, payload);
                 return;
             }
             Long id = parseId(pathInfo);
             writeJson(res, HttpServletResponse.SC_OK, juegoToMap(juegoService.obtener(id)));
         } catch (IllegalArgumentException e) {
             writeJson(res, resolveStatusFromMessage(e.getMessage()), error(e.getMessage()));
+        }
+    }
+
+    private int parseIntParam(HttpServletRequest req, String name, int defaultVal) {
+        String raw = req.getParameter(name);
+        if (raw == null || raw.isBlank()) return defaultVal;
+        try {
+            return Integer.parseInt(raw);
+        } catch (NumberFormatException e) {
+            return defaultVal;
         }
     }
 
