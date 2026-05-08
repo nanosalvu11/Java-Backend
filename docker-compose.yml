@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: casino
+      MYSQL_USER: javauser
+      MYSQL_PASSWORD: java1234
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DB_URL: jdbc:mysql://db:3306/casino
+      DB_USER: javauser
+      DB_PASSWORD: java1234
+      PORT: 8080
+    ports:
+      - "8080:8080"
+
+volumes:
+  db_data:
+

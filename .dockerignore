@@ -1,0 +1,10 @@
+target
+build
+.git
+*.iml
+.idea
+*.class
+.vscode
+node_modules
+/.m2
+

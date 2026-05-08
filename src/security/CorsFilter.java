@@ -13,7 +13,7 @@ import java.io.IOException;
 
 @WebFilter("/*")
 public class CorsFilter implements Filter {
-    private String allowOrigin = "http://localhost:3000"; // configurable si se requiere
+    private String allowOrigin = "http://localhost:5173"; // configurable si se requiere
 
     @Override
     public void init(FilterConfig filterConfig) {
