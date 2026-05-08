@@ -5,7 +5,11 @@ import juego.JuegoServlet;
 import mesa.MesaServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.FilterHolder;
 import usuario.UsuarioServlet;
+import security.CorsFilter;
+import jakarta.servlet.DispatcherType;
+import java.util.EnumSet;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -16,6 +20,11 @@ public class Main {
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
         context.setAttribute(CasinoApp.CONTEXT_ATTRIBUTE, app);
+
+        // Registrar filtro CORS programáticamente para Jetty (las anotaciones @WebFilter
+        // no son detectadas con este setup de ServletContextHandler por defecto).
+        context.addFilter(new FilterHolder(new CorsFilter()), "/*", EnumSet.of(DispatcherType.REQUEST));
+
         context.addServlet(UsuarioServlet.class, UsuarioServlet.BASE_PATH);
         context.addServlet(JuegoServlet.class, JuegoServlet.BASE_PATH);
         context.addServlet(MesaServlet.class, MesaServlet.BASE_PATH);

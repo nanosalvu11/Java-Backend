@@ -66,9 +66,12 @@ FLUSH PRIVILEGES;
 -- ==========================================
 
 -- Usuarios: 1 Admin y 1 Jugador (con 500 lucas de saldo para timbear)
+-- Contraseñas hasheadas con BCrypt (costo 12)
+-- Admin: email=elchiquicenter@admin.com password=admin123
+-- Jugador: email=cliente@gmail.com password=cliente123
 INSERT INTO usuarios (nombre, apellido, email, password, saldo, rol) VALUES
-('Chiqui', 'Tapia', 'elchiquicenter@admin.com', 'admin123', 0.00, 'Admin'),
-('Luu', 'Salvu', 'cliente@gmail.com', 'cliente123', 500000.00, 'Jugador');
+('Chiqui', 'Tapia', 'elchiquicenter@admin.com', '$2a$12$xIS9qNGtj5XwtAYL6wTPUuJXQwZkOhb72ktJsH5N34losoPK1P22q', 0.00, 'Admin'),
+('Luu', 'Salvu', 'cliente@gmail.com', '$2a$12$vWJI00VvMniA5m6EWk.Qd.X8LhWWvxKvRWoFRJLOgc5c/Dkxnjb.C', 500000.00, 'Jugador');
 
 -- Juegos
 INSERT INTO juegos (nombre, reglas) VALUES
